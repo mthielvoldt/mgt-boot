@@ -1,0 +1,34 @@
+set(KEYTOOL_SOURCES
+  deps/wolfBoot/src/delta.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/asn.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/aes.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/ecc.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/coding.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/chacha.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/dilithium.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/ed25519.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/ed448.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/fe_operations.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/ge_operations.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/fe_448.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/ge_448.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/hash.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/logging.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/memory.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/random.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/rsa.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/sp_int.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/sp_c32.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/sp_c64.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/sha3.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/sha256.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/sha512.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/tfm.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/wc_lms.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/wc_lms_impl.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/wc_port.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/wc_xmss.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/wc_xmss_impl.c
+  deps/wolfBoot/lib/wolfssl/wolfcrypt/src/wolfmath.c
+)
+
