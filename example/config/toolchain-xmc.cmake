@@ -12,7 +12,6 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
 set(CMAKE_C_COMPILER arm-none-eabi-gcc)
 set(CMAKE_C_OBJCOPY arm-none-eabi-objcopy)
-set(CMAKE_C_FLAGS "-mfloat-abi=hard -mcpu=cortex-m4 -mthumb -fdata-sections -ffunction-sections -ffreestanding")
 set(CMAKE_C_FLAGS_DEBUG "-Og -g")
 
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections")
@@ -22,17 +21,6 @@ set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections")
   # --specs=nano.specs
   # --specs=nosys.specs
 
-
-# "-Wa," must preceed each option passed to the assembler.
-set(ASSEMBLER_FLAGS "-Wa,-mcpu=cortex-m4")
-
-set(FMT_PORT "XMC4")
-set(MCU_VARIANT "XMC4700")
-set(MCU_SPEED_VARIANT "F144")
-set(MCU_MEM_VARIANT "2048")
-
-# add_compile_definitions(XMC4400_F100x512)
-add_compile_definitions(${MCU_VARIANT}_${MCU_SPEED_VARIANT}x${MCU_MEM_VARIANT})
 
 # Path to pass to the compiler in the --sysroot flag.
 # FROM https://gcc.gnu.org/onlinedocs/gcc/Directory-Options.html
