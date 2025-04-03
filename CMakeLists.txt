@@ -24,14 +24,14 @@ add_library(user_settings INTERFACE)
 target_compile_definitions(user_settings INTERFACE ${USER_SETTINGS} ${SIGN_OPTIONS})
 target_include_directories(user_settings INTERFACE ${PROJECT_SOURCE_DIR}/src)
 
-add_subdirectory(deps/wolfBoot/lib) # provides library target: wolfcrypt
+# provides library target: wolfcrypt
+add_subdirectory(deps/wolfBoot/lib)
 
-add_library(libwolfboot
+add_library(wolfboot
   deps/wolfBoot/src/libwolfboot.c
 )
-
 # removed defs:  WOLFBOOT_FLAGS_INVERT=1; WOLFBOOT_VERSION=1; TARGET_${WOLFBOOT_TARGET}
-target_compile_definitions(libwolfboot PUBLIC
+target_compile_definitions(wolfboot PUBLIC
   __WOLFBOOT;
   ARCH_${ARCH};
   ARCH_FLASH_OFFSET=${ARCH_FLASH_OFFSET};
@@ -39,11 +39,11 @@ target_compile_definitions(libwolfboot PUBLIC
   WOLFBOOT_SIGN_${SIGN};
   WOLFBOOT_HASH_${HASH};
 )
-target_include_directories(libwolfboot PRIVATE
+target_include_directories(wolfboot PRIVATE
   deps/wolfBoot
   deps/wolfBoot/include
 )
-target_link_libraries(libwolfboot wolfcrypt)
+target_link_libraries(wolfboot wolfcrypt)
 
 
 
@@ -78,9 +78,13 @@ add_custom_command(
   COMMENT "Generating keystore.c and private key for signing")
 
 
+add_custom_command(DEPENDS app_offset.elf
+  OUTPUT app_offset.bin
+  COMMAND ${CMAKE_C_OBJCOPY} ARGS -O binary ${PROJECT_BINARY_DIR}/app_offset.elf
+    app_offset.bin
+)
 
-
-add_custom_target(signed_app ALL DEPENDS app.bin keystore)
+add_custom_target(signed_app ALL DEPENDS app_offset.bin keystore)
 # Sign the binary.
 add_custom_command(TARGET signed_app
   COMMAND IMAGE_HEADER_SIZE=${IMAGE_HEADER_SIZE} ${SIGN_TOOL} --ed25519 --sha256 
