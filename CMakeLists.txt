@@ -11,12 +11,21 @@ set(ARCH ARM)
 set(VTOR 1)
 set(SPMATH 1)
 set(WOLFBOOT_TARGET xmc4700 CACHE INTERNAL "Target platform")
+set(DSA ed25519)
+list(APPEND KEYTOOL_OPTIONS --ed25519)
+list(APPEND SIGN_OPTIONS WOLFBOOT_SIGN_ED25519)
+
 set(KEYTOOLS_DIR ${PROJECT_BINARY_DIR}/../keytools)
 
-# Note: WolfBoot modifies CMAKE_C_COMPILER etc, in a file called 
-# toolchain_arm-none-eabi.cmake  but this isn't the same as specifying a
-# toolchain file for the whole project. 
+# Wolfcrypt
+set(WOLFBOOT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/deps/wolfBoot)
+
+add_library(user_settings INTERFACE)
+target_compile_definitions(user_settings INTERFACE ${USER_SETTINGS} ${SIGN_OPTIONS})
+target_include_directories(user_settings INTERFACE ${PROJECT_SOURCE_DIR}/src)
+
 add_subdirectory(deps/wolfBoot/lib) # provides library target: wolfcrypt
+
 add_library(libwolfboot
   deps/wolfBoot/src/libwolfboot.c
 )
