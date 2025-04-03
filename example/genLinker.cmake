@@ -3,6 +3,8 @@
 # - the app partition (offset by the header)
 
 set(LINKER_SCRIPT_TEMPLATE src/XMC4700x2048.ld)
+set(APP_PARTITION_LINKER_FILE  ${PROJECT_BINARY_DIR}/app_part_linker.ld)
+set(ROOT_PARTITION_LINKER_FILE ${PROJECT_BINARY_DIR}/root_part_linker.ld)
 
 math(EXPR APP_CODE_ADDRESS_CACHED 
     "${PARTITION_BOOT_ADDRESS_CACHED} + ${IMAGE_HEADER_SIZE}" 
@@ -12,9 +14,6 @@ math(EXPR APP_CODE_ADDRESS_DIRECT
      OUTPUT_FORMAT HEXADECIMAL)
 math(EXPR CODE_SIZE "${PARTITION_SIZE} - ${IMAGE_HEADER_SIZE}"
      OUTPUT_FORMAT HEXADECIMAL)
-
-set(APP_PARTITION_LINKER_FILE  ${PROJECT_BINARY_DIR}/app_part_linker.ld)
-set(ROOT_PARTITION_LINKER_FILE ${PROJECT_BINARY_DIR}/root_part_linker.ld)
 
 function(config_link_script 
   input_file 
