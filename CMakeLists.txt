@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-# set(CMAKE_TOOLCHAIN_FILE "toolchain-xmc.cmake")
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Debug")
 endif()
@@ -79,7 +77,7 @@ add_custom_command(
     WORKING_DIRECTORY ${WOLFBOOT_ROOT}
     COMMENT "Building bin-assemble tool")
 
-    
+
 # Key Generation
 set(KEYS_DIR ${PROJECT_BINARY_DIR}/../build-keys)
 file(MAKE_DIRECTORY ${KEYS_DIR})
@@ -121,33 +119,32 @@ target_include_directories(bootloader.elf PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(bootloader.elf flash_lib wolfboot mcu_startup)
 target_link_options(bootloader.elf PRIVATE 
   "-T${ROOT_PARTITION_LINKER_FILE}")
+
 add_custom_command(TARGET bootloader.elf POST_BUILD
   COMMAND ${CMAKE_C_OBJCOPY} ARGS -O binary bootloader.elf bootloader.bin
 )
 
-add_custom_target(factory_bin ALL DEPENDS 
-  signed_app
-  bootloader.elf
-  ${BIN_ASSEMBLE_TOOL}
-)
-
-add_custom_command(TARGET factory_bin
+# Assemble factory binary (bl+app combined)
+add_custom_command(OUTPUT factory.bin
+  DEPENDS signed_app bootloader.bin ${BIN_ASSEMBLE_TOOL}
   COMMAND ${BIN_ASSEMBLE_TOOL} 
     factory.bin 
     ${ARCH_FLASH_OFFSET}
-    ${PROJECT_BINARY_DIR}/bootloader.bin
+    bootloader.bin
     ${WOLFBOOT_PARTITION_BOOT_ADDRESS}
-    ${PROJECT_BINARY_DIR}/app_v${APP_VERSION}_signed.bin
+    app_offset_v${APP_VERSION}_signed.bin
+  COMMENT "Assembling factory image from bootloader and signed app"
 )
 
-# Copy image files to folder outside binary dir so I can use clean-build to make
-# different versions.  Note I only need this until I figure out 
-# - how to bump versions with just the build step, or 
-# - how to re-configure without deleting the whole build dir.
-set(IMAGES_DIR ${PROJECT_BINARY_DIR}/../images)
-add_custom_command(TARGET factory_bin
-  COMMAND mkdir -p ${PROJECT_BINARY_DIR}/../images &&
-    cp ${PROJECT_BINARY_DIR}/factory.bin ${IMAGES_DIR}/factory_v${APP_VERSION}.bin &&
-    cp ${PROJECT_BINARY_DIR}/app_v${APP_VERSION}_signed.bin ${IMAGES_DIR}/ &&
-    cp ${PROJECT_BINARY_DIR}/app.elf ${IMAGES_DIR}/app_v${APP_VERSION}.elf
+# Copy image files to dedicated dir
+set(IMAGES_DIR ${PROJECT_BINARY_DIR}/../build-images/v${APP_VERSION})
+file(MAKE_DIRECTORY ${IMAGES_DIR})
+add_custom_target(bundle_images ALL DEPENDS factory.bin)
+add_custom_command(TARGET bundle_images
+  COMMAND 
+    cp ${PROJECT_BINARY_DIR}/app_offset.elf  ${IMAGES_DIR}/ &&
+    cp ${PROJECT_BINARY_DIR}/app_root.elf    ${IMAGES_DIR}/ &&
+    cp app_offset_v${APP_VERSION}_signed.bin ${IMAGES_DIR}/ &&
+    cp bootloader.elf                        ${IMAGES_DIR}/ &&
+    cp factory.bin                           ${IMAGES_DIR}/
 )

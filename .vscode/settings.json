@@ -6,6 +6,8 @@
     "KEYGEN",
     "KEYTOOL",
     "KEYTOOLS",
+    "libwolfboot",
+    "PMEM",
     "wolfboot"
   ]
 }
