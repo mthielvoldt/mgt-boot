@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include <fmt_flash.h>
+#include <flash.h>
 #include <image.h>
 #include <hal.h> // do_boot()
 #include <wolfboot/wolfboot.h>
 #include <wolfboot/version.h>
-#include <target.h>
+#include <partitions.h>
 
 typedef struct
 {
@@ -16,13 +16,10 @@ typedef struct
   uint8_t unconfirmed;
 } partition_status_t;
 
-#define ACTIVE_PARTITION   (uint8_t *)WOLFBOOT_PARTITION_BOOT_ADDRESS
-#define DOWNLOAD_PARTITION (uint8_t *)WOLFBOOT_PARTITION_UPDATE_ADDRESS
-#define BACKUP_PARTITION   (uint8_t *)WOLFBOOT_PARTITION_SWAP_ADDRESS
+#define ACTIVE_PARTITION   (uint8_t *)PARTITION_ACTIVE_ADDRESS_DIRECT
+#define DOWNLOAD_PARTITION (uint8_t *)PARTITION_UPDATE_ADDRESS
+#define BACKUP_PARTITION   (uint8_t *)PARTITION_BACKUP_ADDRESS
 #define TEST_RESULT_FLASH_ADDRESS     0x0C01C000u // S7 (logical) last 16kB sector.
-
-#define PARTITION_SIZE WOLFBOOT_PARTITION_SIZE
-#define SECTOR_SIZE WOLFBOOT_SECTOR_SIZE
 
 #define STATUS_TEST_PASS 0xFFFFFFFFu
 
@@ -62,11 +59,11 @@ bool validNoncePresent(void)
 }
 void copyImage(uint8_t * dest, uint8_t * src)
 {
-  // Note: hal_flash_erase checks each sector is blank before erasing.
-  hal_flash_erase((int32_t)dest, PARTITION_SIZE);
+  // Note: flash_erase checks each sector is blank before erasing.
+  flash_erase((int32_t)dest, PARTITION_SIZE);
 
   // TODO: Optim: only write the image size.
-  hal_flash_write((int32_t)dest, src, PARTITION_SIZE);
+  flash_program((int32_t)dest, src, PARTITION_SIZE);
 }
 bool testPassSaved()
 {
@@ -76,7 +73,7 @@ void clearTestResult(void)
 {
   if (testPassSaved())
   {
-    hal_flash_erase(TEST_RESULT_FLASH_ADDRESS, sizeof(uint32_t));
+    flash_erase(TEST_RESULT_FLASH_ADDRESS, sizeof(uint32_t));
   }
 }
 void saveTestPass(void)
@@ -84,7 +81,7 @@ void saveTestPass(void)
   const uint32_t testPass = STATUS_TEST_PASS;
   if (!testPassSaved())
   {
-    hal_flash_write(
+    flash_program(
         TEST_RESULT_FLASH_ADDRESS,
         (uint8_t *)&testPass,
         sizeof(uint32_t));
@@ -93,9 +90,7 @@ void saveTestPass(void)
 
 void runApp(void)
 {
-  // APP_CODE_ADDRESS_CACHED currently defined in CMakeLists.
-  // TODO: move to configured header for clarity
-  do_boot((uint32_t*)APP_CODE_ADDRESS_CACHED);
+  do_boot((uint32_t*)ACTIVE_APP_ADDRESS_CACHED);
 }
 
 void installUpdate(void)

@@ -7,19 +7,21 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+set(GENERATED_FILE_WARNING 
+  "NOTICE: This file is generated.  Edits will be overwritten.")
+
 set(ARCH ARM)
-set(VTOR 1)
+set(VTOR 1) # TODO: prune? 
 set(SPMATH 1)
 set(WOLFBOOT_TARGET xmc4700 CACHE INTERNAL "Target platform")
 set(DSA ed25519)
 list(APPEND KEYTOOL_OPTIONS --ed25519)
 list(APPEND SIGN_OPTIONS WOLFBOOT_SIGN_ED25519)
 
-set(KEYTOOLS_DIR ${PROJECT_BINARY_DIR}/../keytools)
 
 # Wolfcrypt
 set(WOLFBOOT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/deps/wolfBoot)
-
+add_library(target INTERFACE)
 add_library(user_settings INTERFACE)
 target_compile_definitions(user_settings INTERFACE ${USER_SETTINGS} ${SIGN_OPTIONS})
 target_include_directories(user_settings INTERFACE ${PROJECT_SOURCE_DIR}/src)
@@ -29,25 +31,26 @@ add_subdirectory(deps/wolfBoot/lib)
 
 add_library(wolfboot
   deps/wolfBoot/src/libwolfboot.c
+  deps/wolfBoot/src/boot_arm.c
+  deps/wolfBoot/src/image.c
 )
 # removed defs:  WOLFBOOT_FLAGS_INVERT=1; WOLFBOOT_VERSION=1; TARGET_${WOLFBOOT_TARGET}
 target_compile_definitions(wolfboot PUBLIC
   __WOLFBOOT;
   ARCH_${ARCH};
-  ARCH_FLASH_OFFSET=${ARCH_FLASH_OFFSET};
+  ARCH_FLASH_OFFSET=${PMEM_BASE_ADDRESS_DIRECT};
   IMAGE_HEADER_SIZE=${IMAGE_HEADER_SIZE};
   WOLFBOOT_SIGN_${SIGN};
   WOLFBOOT_HASH_${HASH};
 )
-target_include_directories(wolfboot PRIVATE
-  deps/wolfBoot
+target_include_directories(wolfboot PUBLIC
   deps/wolfBoot/include
 )
 target_link_libraries(wolfboot wolfcrypt)
 
 
 
-
+# Signing and Key-generation tools Build
 set(KEYTOOLS_DIR ${PROJECT_BINARY_DIR}/../build-keytools)
 set(KEYS_DIR ${PROJECT_BINARY_DIR}/../build-keys)
 file(MAKE_DIRECTORY ${KEYTOOLS_DIR} ${KEYS_DIR})
@@ -58,7 +61,6 @@ set(KEYSTORE ${KEYS_DIR}/keystore.c)
 set(PRIVATE_KEY ${KEYS_DIR}/private_key.der)
 include(keytoolSources.cmake)
 
-# Signing tool always required
 add_custom_command(
   OUTPUT ${SIGN_TOOL}
   COMMAND gcc -o ${SIGN_TOOL} tools/keytools/sign.c ${KEYTOOL_SOURCES}
@@ -73,6 +75,7 @@ add_custom_command(
   WORKING_DIRECTORY ${WOLFBOOT_ROOT}
   COMMENT "Building keygen tool")
 
+# Key Generation
 add_custom_command(
   OUTPUT ${KEYSTORE} ${PRIVATE_KEY}
   DEPENDS ${KEYGEN_TOOL}
@@ -81,36 +84,31 @@ add_custom_command(
   WORKING_DIRECTORY ${KEYTOOLS_DIR}
   COMMENT "Generating keystore and private key in ${KEYS_DIR}.")
 
-
+# Signed App Binary
 add_custom_command(DEPENDS app_offset.elf
   OUTPUT app_offset.bin
   COMMAND ${CMAKE_C_OBJCOPY} ARGS -O binary ${PROJECT_BINARY_DIR}/app_offset.elf
     app_offset.bin
 )
-
 add_custom_target(signed_app ALL 
   DEPENDS app_offset.bin ${SIGN_TOOL} ${PRIVATE_KEY}
 )
-# Sign the binary.
 add_custom_command(TARGET signed_app
   COMMAND IMAGE_HEADER_SIZE=${IMAGE_HEADER_SIZE} ${SIGN_TOOL} --ed25519 --sha256 
-    ${PROJECT_BINARY_DIR}/app.bin 
+    app_offset.bin
     ${PRIVATE_KEY}
     ${APP_VERSION}
   COMMENT "Signing app.bin, creating app_v<x>_signed.bin"  
 )
 
+# Bootloader build
+configure_file(src/partitions.h.in partitions.h)
 add_executable(bootloader.elf
   src/bl_main.c
-  deps/wolfBoot/src/boot_arm.c
-  deps/wolfBoot/src/image.c
   ${KEYSTORE}
 )
-# TODO: Move this into my replacement for target.h
-target_compile_definitions(bootloader.elf PRIVATE
-  APP_CODE_ADDRESS_CACHED=${APP_CODE_ADDRESS_CACHED}
-)
-target_link_libraries(bootloader.elf flash_lib)
+target_include_directories(bootloader.elf PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(bootloader.elf flash_lib wolfboot mcu_startup)
 target_link_options(bootloader.elf PRIVATE 
   "-T${ROOT_PARTITION_LINKER_FILE}")
 add_custom_command(TARGET bootloader.elf POST_BUILD
