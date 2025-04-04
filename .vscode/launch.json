@@ -1,0 +1,37 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "standalone",
+      "type": "cortex-debug",
+      "servertype": "jlink",
+      "request": "launch",
+      "serverpath": "JLinkGDBServerCLExe",
+      "cwd": "${workspaceFolder}",
+      "executable": "example/build/app_root.elf",
+      "device": "XMC4700-2048",
+      "showDevDebugOutput": "vscode",
+    },
+    {
+      "name": "BL+App-noFlash",
+      "type": "cortex-debug",
+      "servertype": "jlink",
+      "request": "launch",
+      "serverpath": "JLinkGDBServerCLExe",
+      "cwd": "${workspaceFolder}/example/build",
+      "loadFiles": [],
+      "symbolFiles": ["mgt-boot/bootloader.elf", "app_offset.elf"],
+      "device": "XMC4700-2048",
+      "showDevDebugOutput": "vscode",
+      // "preLaunchCommands": [
+      //   "loadbin images/factory_v3.bin, 0x0C000000",
+      //   "reset",
+      //   "add-symbol-file build/bootloader.elf",
+      //   "add-symbol-file images/app_v2.elf"
+      // ]
+    }
+  ]
+}
