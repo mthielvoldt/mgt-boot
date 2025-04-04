@@ -36,7 +36,7 @@ add_library(wolfboot
 target_compile_definitions(wolfboot PUBLIC
   __WOLFBOOT;
   ARCH_${ARCH};
-  ARCH_FLASH_OFFSET=${PMEM_BASE_ADDRESS_DIRECT};
+  ARCH_FLASH_OFFSET=${PMEM_ROOT_ADDRESS_DIRECT};
   IMAGE_HEADER_SIZE=${IMAGE_HEADER_SIZE};
   WOLFBOOT_SIGN_${SIGN};
   WOLFBOOT_HASH_${HASH};
@@ -129,9 +129,9 @@ add_custom_command(OUTPUT factory.bin
   DEPENDS signed_app bootloader.bin ${BIN_ASSEMBLE_TOOL}
   COMMAND ${BIN_ASSEMBLE_TOOL} 
     factory.bin 
-    ${ARCH_FLASH_OFFSET}
+    ${PMEM_ROOT_ADDRESS_DIRECT}
     bootloader.bin
-    ${WOLFBOOT_PARTITION_BOOT_ADDRESS}
+    ${PARTITION_ACTIVE_ADDRESS_DIRECT}
     app_offset_v${APP_VERSION}_signed.bin
   COMMENT "Assembling factory image from bootloader and signed app"
 )
@@ -145,6 +145,7 @@ add_custom_command(TARGET bundle_images
     cp ${PROJECT_BINARY_DIR}/app_offset.elf  ${IMAGES_DIR}/ &&
     cp ${PROJECT_BINARY_DIR}/app_root.elf    ${IMAGES_DIR}/ &&
     cp app_offset_v${APP_VERSION}_signed.bin ${IMAGES_DIR}/ &&
+    cp app_offset_v${APP_VERSION}_signed.bin app_offset_latest_signed.bin &&
     cp bootloader.elf                        ${IMAGES_DIR}/ &&
     cp factory.bin                           ${IMAGES_DIR}/
 )
