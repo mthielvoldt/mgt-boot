@@ -50,15 +50,13 @@ target_link_libraries(wolfboot wolfcrypt)
 
 
 
-# Signing and Key-generation tools Build
+# Signing, Key-generation, and Bin-assemble tools Build
 set(KEYTOOLS_DIR ${PROJECT_BINARY_DIR}/../build-keytools)
-set(KEYS_DIR ${PROJECT_BINARY_DIR}/../build-keys)
-file(MAKE_DIRECTORY ${KEYTOOLS_DIR} ${KEYS_DIR})
-
+file(MAKE_DIRECTORY ${KEYTOOLS_DIR})
 set(SIGN_TOOL ${KEYTOOLS_DIR}/sign)
 set(KEYGEN_TOOL ${KEYTOOLS_DIR}/keygen)
-set(KEYSTORE ${KEYS_DIR}/keystore.c)
-set(PRIVATE_KEY ${KEYS_DIR}/private_key.der)
+set(BIN_ASSEMBLE_TOOL ${KEYTOOLS_DIR}/bin-assemble)
+
 include(keytoolSources.cmake)
 
 add_custom_command(
@@ -75,7 +73,19 @@ add_custom_command(
   WORKING_DIRECTORY ${WOLFBOOT_ROOT}
   COMMENT "Building keygen tool")
 
+add_custom_command(
+    OUTPUT ${BIN_ASSEMBLE_TOOL}
+    COMMAND gcc tools/bin-assemble/bin-assemble.c -o ${BIN_ASSEMBLE_TOOL}
+    WORKING_DIRECTORY ${WOLFBOOT_ROOT}
+    COMMENT "Building bin-assemble tool")
+
+    
 # Key Generation
+set(KEYS_DIR ${PROJECT_BINARY_DIR}/../build-keys)
+file(MAKE_DIRECTORY ${KEYS_DIR})
+set(KEYSTORE ${KEYS_DIR}/keystore.c)
+set(PRIVATE_KEY ${KEYS_DIR}/private_key.der)
+
 add_custom_command(
   OUTPUT ${KEYSTORE} ${PRIVATE_KEY}
   DEPENDS ${KEYGEN_TOOL}
@@ -118,11 +128,11 @@ add_custom_command(TARGET bootloader.elf POST_BUILD
 add_custom_target(factory_bin ALL DEPENDS 
   signed_app
   bootloader.elf
-  binAssemble
+  ${BIN_ASSEMBLE_TOOL}
 )
 
 add_custom_command(TARGET factory_bin
-  COMMAND ${BINASSEMBLE} 
+  COMMAND ${BIN_ASSEMBLE_TOOL} 
     factory.bin 
     ${ARCH_FLASH_OFFSET}
     ${PROJECT_BINARY_DIR}/bootloader.bin
