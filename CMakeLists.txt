@@ -49,10 +49,13 @@ target_link_libraries(wolfboot wolfcrypt)
 
 
 set(KEYTOOLS_DIR ${PROJECT_BINARY_DIR}/../build-keytools)
+set(KEYS_DIR ${PROJECT_BINARY_DIR}/../build-keys)
+file(MAKE_DIRECTORY ${KEYTOOLS_DIR} ${KEYS_DIR})
+
 set(SIGN_TOOL ${KEYTOOLS_DIR}/sign)
 set(KEYGEN_TOOL ${KEYTOOLS_DIR}/keygen)
-set(KEYSTORE ${KEYTOOLS_DIR}/keystore.c)
-set(PRIVATE_KEY ${KEYTOOLS_DIR}/private_key.der)
+set(KEYSTORE ${KEYS_DIR}/keystore.c)
+set(PRIVATE_KEY ${KEYS_DIR}/private_key.der)
 include(keytoolSources.cmake)
 
 # Signing tool always required
@@ -72,10 +75,11 @@ add_custom_command(
 
 add_custom_command(
   OUTPUT ${KEYSTORE} ${PRIVATE_KEY}
+  DEPENDS ${KEYGEN_TOOL}
   COMMAND ${KEYGEN_TOOL} ${KEYTOOL_OPTIONS} -g ${PRIVATE_KEY}
-          -keystoreDir ${KEYTOOLS_DIR}
-  WORKING_DIRECTORY ${WOLFBOOT_ROOT}
-  COMMENT "Generating keystore.c and private key for signing")
+          -keystoreDir ${KEYS_DIR}
+  WORKING_DIRECTORY ${KEYTOOLS_DIR}
+  COMMENT "Generating keystore and private key in ${KEYS_DIR}.")
 
 
 add_custom_command(DEPENDS app_offset.elf
@@ -84,7 +88,9 @@ add_custom_command(DEPENDS app_offset.elf
     app_offset.bin
 )
 
-add_custom_target(signed_app ALL DEPENDS app_offset.bin keystore)
+add_custom_target(signed_app ALL 
+  DEPENDS app_offset.bin ${SIGN_TOOL} ${PRIVATE_KEY}
+)
 # Sign the binary.
 add_custom_command(TARGET signed_app
   COMMAND IMAGE_HEADER_SIZE=${IMAGE_HEADER_SIZE} ${SIGN_TOOL} --ed25519 --sha256 
