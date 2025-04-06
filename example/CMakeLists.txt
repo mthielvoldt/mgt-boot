@@ -15,6 +15,7 @@ include(genLinker.cmake)
 include(config/cryptOptions.cmake)
 include(simpleVersion.cmake)
 
+set(MGTBOOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 add_subdirectory(flashLib)
 
 # build app
@@ -36,4 +37,4 @@ add_executable(app_offset.elf ${APP_SRCS})
 target_link_libraries(app_offset.elf mcu_startup)
 target_link_options(app_offset.elf PRIVATE "-T${APP_PARTITION_LINKER_FILE}")
 
-add_subdirectory(.. mgt-boot)
+add_subdirectory(${MGTBOOT_DIR} mgt-boot)

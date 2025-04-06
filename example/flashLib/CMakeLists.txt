@@ -4,4 +4,7 @@ add_library(flash_lib
   flash.c
 )
 
-target_include_directories(flash_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(flash_lib PUBLIC
+  ${MGTBOOT_DIR}/inc  # flash.h
+  ${PROJECT_BINARY_DIR}/mgt-boot  # partitions.h (configured)
+)
