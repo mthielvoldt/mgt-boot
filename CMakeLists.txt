@@ -1,9 +1,19 @@
 cmake_minimum_required(VERSION 3.22.1)
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Debug")
-endif()
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+## This file should be referenced as so:
+# add_subdirectory(this/files/directory mgt-boot)
+#
+## it requires the following to be provided by the project's CMakeLists.txt: 
+# Cmake variables to be set:
+# - CMAKE_BUILD_TYPE: ["Debug" | "Release"]
+# - ROOT_PARTITION_LINKER_FILE: path to MCU-appropriate .ld file.
+# - APP_VERSION: a string suitable for insertion in a file name.
+# Targets:
+# - mcu_startup library.
+# - flash_lib library that implements flash.h interface.
+# - app_offset.elf executable
+# - app_root.elf executable (planned change: this requirement->optional)
+
 
 set(GENERATED_FILE_WARNING 
   "NOTICE: This file is generated.  Edits will be overwritten.")

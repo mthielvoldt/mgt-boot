@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.22.1)
+
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/config/toolchain-xmc.cmake)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Debug")
+endif()
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 project(mgt_boot_example LANGUAGES C ASM)
 
