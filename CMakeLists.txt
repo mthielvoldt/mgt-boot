@@ -59,11 +59,11 @@ target_link_libraries(wolfboot wolfcrypt)
 
 
 # Signing, Key-generation, and Bin-assemble tools Build
-set(KEYTOOLS_DIR ${PROJECT_BINARY_DIR}/../build-keytools)
-file(MAKE_DIRECTORY ${KEYTOOLS_DIR})
-set(SIGN_TOOL ${KEYTOOLS_DIR}/sign)
-set(KEYGEN_TOOL ${KEYTOOLS_DIR}/keygen)
-set(BIN_ASSEMBLE_TOOL ${KEYTOOLS_DIR}/bin-assemble)
+set(TOOLS_DIR ${PROJECT_BINARY_DIR}/../build-tools)
+file(MAKE_DIRECTORY ${TOOLS_DIR})
+set(SIGN_TOOL ${TOOLS_DIR}/sign)
+set(KEYGEN_TOOL ${TOOLS_DIR}/keygen)
+set(BIN_ASSEMBLE_TOOL ${TOOLS_DIR}/bin-assemble)
 
 include(keytoolSources.cmake)
 
@@ -92,15 +92,26 @@ add_custom_command(
 set(KEYS_DIR ${PROJECT_BINARY_DIR}/../build-keys)
 file(MAKE_DIRECTORY ${KEYS_DIR})
 set(KEYSTORE ${KEYS_DIR}/keystore.c)
-set(PRIVATE_KEY ${KEYS_DIR}/private_key.der)
+set(PUBLIC_KEY ${KEYS_DIR}/key_pub.der)
+set(PRIVATE_KEY ${KEYS_DIR}/key.der)
+
+# If either public or private key is missing, this custom command runs in place
+# of the next custom command to generate keys, *and* keystore.c
+add_custom_command(
+  OUTPUT ${PUBLIC_KEY} ${PRIVATE_KEY}
+  DEPENDS ${KEYGEN_TOOL}
+  COMMAND ${KEYGEN_TOOL} ${KEYTOOL_OPTIONS} --exportpubkey -g key.der
+    -keystoreDir ${KEYS_DIR}
+  WORKING_DIRECTORY ${KEYS_DIR}
+  COMMENT "Generating new key pair in ${KEYS_DIR}.")
 
 add_custom_command(
-  OUTPUT ${KEYSTORE} ${PRIVATE_KEY}
-  DEPENDS ${KEYGEN_TOOL}
-  COMMAND ${KEYGEN_TOOL} ${KEYTOOL_OPTIONS} -g ${PRIVATE_KEY}
-          -keystoreDir ${KEYS_DIR}
-  WORKING_DIRECTORY ${KEYTOOLS_DIR}
-  COMMENT "Generating keystore and private key in ${KEYS_DIR}.")
+  OUTPUT ${KEYSTORE}
+  DEPENDS ${KEYGEN_TOOL} ${PUBLIC_KEY}
+  COMMAND ${KEYGEN_TOOL} ${KEYTOOL_OPTIONS} -i ${PUBLIC_KEY}
+    -keystoreDir ${KEYS_DIR}
+  WORKING_DIRECTORY ${KEYS_DIR}
+  COMMENT "Generating keystore.c in ${KEYS_DIR}.")
 
 # Signed App Binary
 add_custom_command(DEPENDS app_offset.elf
