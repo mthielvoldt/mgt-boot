@@ -10,12 +10,13 @@ project(mgt_boot_example LANGUAGES C ASM)
 
 include(config/mcuDetails.cmake)
 include(config/partitions.cmake)
-include(genLinker.cmake)
-
 include(config/cryptOptions.cmake)
 include(simpleVersion.cmake)
 
 set(MGTBOOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+set(LINKER_SCRIPT_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/src/XMC4700x2048.ld)
+include(${MGTBOOT_DIR}/tools/genLinker.cmake) # req: LINKER_SCRIPT_TEMPLATE
+
 add_subdirectory(flashLib)
 
 # build app
