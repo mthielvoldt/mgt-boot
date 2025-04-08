@@ -30,9 +30,9 @@ list(APPEND SIGN_OPTIONS WOLFBOOT_SIGN_ED25519)
 # Wolfcrypt
 set(WOLFBOOT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/deps/wolfBoot)
 add_library(target INTERFACE)
+target_include_directories(target INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/stubs)
 add_library(user_settings INTERFACE)
 target_compile_definitions(user_settings INTERFACE ${USER_SETTINGS} ${SIGN_OPTIONS})
-target_include_directories(user_settings INTERFACE ${PROJECT_SOURCE_DIR}/src)
 
 # provides library target: wolfcrypt
 add_subdirectory(deps/wolfBoot/lib)
