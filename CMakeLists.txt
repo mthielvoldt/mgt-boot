@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.22.1)
 # - ROOT_PARTITION_LINKER_FILE: path to MCU-appropriate .ld file.
 # - APP_VERSION: a string suitable for insertion in a file name.
 # Targets:
-# - mcu_startup library.
+# - MCUPort library.
 # - flash_lib library that implements flash.h interface.
 # - app_offset.elf executable
 # - app_root.elf executable (planned change: this requirement->optional)
@@ -137,7 +137,7 @@ add_executable(bootloader.elf
   ${KEYSTORE}
 )
 target_include_directories(bootloader.elf PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(bootloader.elf flash_lib wolfboot mcu_startup)
+target_link_libraries(bootloader.elf flash_lib wolfboot MCUPort)
 target_link_options(bootloader.elf PRIVATE 
   "-T${ROOT_PARTITION_LINKER_FILE}")
 

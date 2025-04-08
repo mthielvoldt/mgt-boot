@@ -22,20 +22,20 @@ add_subdirectory(flashLib)
 # build app
 set(APP_SRCS src/app.c)
 
-add_library(mcu_startup
+add_library(MCUPort
   src/system_XMC4700.c
   src/startup_XMC4700.S
 )
-target_include_directories(mcu_startup PRIVATE src/CMSIS-6.1.0/Core/Include)
-target_compile_options(mcu_startup PRIVATE ${ASSEMBLER_FLAGS})
+target_include_directories(MCUPort PRIVATE src/CMSIS-6.1.0/Core/Include)
+target_compile_options(MCUPort PRIVATE ${ASSEMBLER_FLAGS})
 
 add_executable(app_root.elf ${APP_SRCS})
-target_link_libraries(app_root.elf mcu_startup)
+target_link_libraries(app_root.elf MCUPort)
 target_link_options(app_root.elf PRIVATE "-T${ROOT_PARTITION_LINKER_FILE}")
 
 
 add_executable(app_offset.elf ${APP_SRCS})
-target_link_libraries(app_offset.elf mcu_startup)
+target_link_libraries(app_offset.elf MCUPort)
 target_link_options(app_offset.elf PRIVATE "-T${APP_PARTITION_LINKER_FILE}")
 
 add_subdirectory(${MGTBOOT_DIR} mgt-boot)
