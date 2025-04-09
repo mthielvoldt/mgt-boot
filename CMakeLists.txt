@@ -122,7 +122,7 @@ add_custom_command(DEPENDS app_offset.elf
 add_custom_target(signed_app ALL 
   DEPENDS app_offset.bin ${SIGN_TOOL} ${PRIVATE_KEY}
 )
-add_custom_command(TARGET signed_app
+add_custom_command(TARGET signed_app POST_BUILD
   COMMAND IMAGE_HEADER_SIZE=${IMAGE_HEADER_SIZE} ${SIGN_TOOL} --ed25519 --sha256 
     app_offset.bin
     ${PRIVATE_KEY}
@@ -161,7 +161,7 @@ add_custom_command(OUTPUT factory.bin
 set(IMAGES_DIR ${PROJECT_BINARY_DIR}/../build-images/v${APP_VERSION})
 file(MAKE_DIRECTORY ${IMAGES_DIR})
 add_custom_target(bundle_images ALL DEPENDS factory.bin)
-add_custom_command(TARGET bundle_images
+add_custom_command(TARGET bundle_images POST_BUILD
   COMMAND 
     cp ${PROJECT_BINARY_DIR}/app_offset.elf  ${IMAGES_DIR}/ &&
     cp ${PROJECT_BINARY_DIR}/app_root.elf    ${IMAGES_DIR}/ &&
