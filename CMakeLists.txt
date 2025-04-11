@@ -8,6 +8,8 @@ cmake_minimum_required(VERSION 3.22.1)
 # - CMAKE_BUILD_TYPE: ["Debug" | "Release"]
 # - ROOT_PARTITION_LINKER_FILE: path to MCU-appropriate .ld file.
 # - MGTBOOT_DIR: absolute path to the mgt-boot dir.
+# - APP_DEPENDS: a list of dependencies for the app (sources and libraries).
+#     This is used to determine when to generate a new build_time.
 # Targets:
 # - MCUPort library.
 # - flash_lib library that implements flash.h interface.
