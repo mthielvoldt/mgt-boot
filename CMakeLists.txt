@@ -119,10 +119,9 @@ add_custom_command(DEPENDS app_offset.elf
   COMMAND ${CMAKE_C_OBJCOPY} ARGS -O binary ${PROJECT_BINARY_DIR}/app_offset.elf
     app_offset.bin
 )
-add_custom_target(signed_app ALL 
+add_custom_target(signed_app ALL DEPENDS app_offset_signed.bin)
+add_custom_command(OUTPUT app_offset_signed.bin
   DEPENDS app_offset.bin ${SIGN_TOOL} ${PRIVATE_KEY}
-)
-add_custom_command(TARGET signed_app POST_BUILD
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/runSignTool.sh
     ${IMAGE_HEADER_SIZE} 
     ${SIGN_TOOL} 
@@ -149,7 +148,7 @@ add_custom_command(TARGET bootloader.elf POST_BUILD
 # Assemble factory binary (bl+app combined)
 add_custom_target(factory_image ALL DEPENDS factory.bin)
 add_custom_command(OUTPUT factory.bin
-  DEPENDS signed_app bootloader.bin ${BIN_ASSEMBLE_TOOL}
+  DEPENDS app_offset_signed.bin bootloader.bin ${BIN_ASSEMBLE_TOOL}
   COMMAND ${BIN_ASSEMBLE_TOOL} 
     factory.bin 
     ${PMEM_ROOT_ADDRESS_DIRECT}
