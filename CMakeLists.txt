@@ -147,6 +147,7 @@ add_custom_command(TARGET bootloader.elf POST_BUILD
 )
 
 # Assemble factory binary (bl+app combined)
+add_custom_target(factory_image ALL DEPENDS factory.bin)
 add_custom_command(OUTPUT factory.bin
   DEPENDS signed_app bootloader.bin ${BIN_ASSEMBLE_TOOL}
   COMMAND ${BIN_ASSEMBLE_TOOL} 
