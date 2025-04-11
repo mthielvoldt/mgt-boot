@@ -7,12 +7,11 @@ cmake_minimum_required(VERSION 3.22.1)
 # Cmake variables to be set:
 # - CMAKE_BUILD_TYPE: ["Debug" | "Release"]
 # - ROOT_PARTITION_LINKER_FILE: path to MCU-appropriate .ld file.
-# - APP_VERSION: a string suitable for insertion in a file name.
+# - MGTBOOT_DIR: absolute path to the mgt-boot dir.
 # Targets:
 # - MCUPort library.
 # - flash_lib library that implements flash.h interface.
 # - app_offset.elf executable
-# - app_root.elf executable (planned change: this requirement->optional)
 
 
 set(GENERATED_FILE_WARNING 
@@ -42,7 +41,6 @@ add_library(wolfboot
   deps/wolfBoot/src/boot_arm.c
   deps/wolfBoot/src/image.c
 )
-# removed defs:  WOLFBOOT_FLAGS_INVERT=1; WOLFBOOT_VERSION=1; TARGET_${WOLFBOOT_TARGET}
 target_compile_definitions(wolfboot PUBLIC
   __WOLFBOOT;
   ARCH_${ARCH};
@@ -123,10 +121,11 @@ add_custom_target(signed_app ALL
   DEPENDS app_offset.bin ${SIGN_TOOL} ${PRIVATE_KEY}
 )
 add_custom_command(TARGET signed_app POST_BUILD
-  COMMAND IMAGE_HEADER_SIZE=${IMAGE_HEADER_SIZE} ${SIGN_TOOL} --ed25519 --sha256 
-    app_offset.bin
-    ${PRIVATE_KEY}
-    ${APP_VERSION}
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/runSignTool.sh
+    ${IMAGE_HEADER_SIZE} 
+    ${SIGN_TOOL} 
+    ${PRIVATE_KEY} 
+    ${PROJECT_BINARY_DIR}/build_time.txt
   COMMENT "Signing app.bin, creating app_v<x>_signed.bin"  
 )
 
@@ -153,20 +152,6 @@ add_custom_command(OUTPUT factory.bin
     ${PMEM_ROOT_ADDRESS_DIRECT}
     bootloader.bin
     ${PARTITION_ACTIVE_ADDRESS_DIRECT}
-    app_offset_v${APP_VERSION}_signed.bin
+    app_offset_signed.bin
   COMMENT "Assembling factory image from bootloader and signed app"
-)
-
-# Copy image files to dedicated dir
-set(IMAGES_DIR ${PROJECT_BINARY_DIR}/../build-images/v${APP_VERSION})
-file(MAKE_DIRECTORY ${IMAGES_DIR})
-add_custom_target(bundle_images ALL DEPENDS factory.bin)
-add_custom_command(TARGET bundle_images POST_BUILD
-  COMMAND 
-    cp ${PROJECT_BINARY_DIR}/app_offset.elf  ${IMAGES_DIR}/ &&
-    cp ${PROJECT_BINARY_DIR}/app_root.elf    ${IMAGES_DIR}/ &&
-    cp app_offset_v${APP_VERSION}_signed.bin ${IMAGES_DIR}/ &&
-    cp app_offset_v${APP_VERSION}_signed.bin app_offset_latest_signed.bin &&
-    cp bootloader.elf                        ${IMAGES_DIR}/ &&
-    cp factory.bin                           ${IMAGES_DIR}/
 )
