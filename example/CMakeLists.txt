@@ -30,12 +30,14 @@ add_library(MCUPort
 target_include_directories(MCUPort PRIVATE src/CMSIS-6.1.0/Core/Include)
 target_compile_options(MCUPort PRIVATE ${ASSEMBLER_FLAGS})
 
-add_executable(app_root.elf ${APP_SRCS} ${BUILD_TIME_HEADER})
+add_executable(app_root.elf ${APP_SRCS} ${BUILD_TIME_C})
+target_include_directories(app_root.elf PRIVATE ${MGTBOOT_DIR}/inc)
 target_link_libraries(app_root.elf MCUPort)
 target_link_options(app_root.elf PRIVATE "-T${ROOT_PARTITION_LINKER_FILE}")
 
 
-add_executable(app_offset.elf ${APP_SRCS} ${BUILD_TIME_HEADER})
+add_executable(app_offset.elf ${APP_SRCS} ${BUILD_TIME_C})
+target_include_directories(app_offset.elf PRIVATE ${MGTBOOT_DIR}/inc)
 target_link_libraries(app_offset.elf MCUPort)
 target_link_options(app_offset.elf PRIVATE "-T${APP_PARTITION_LINKER_FILE}")
 
