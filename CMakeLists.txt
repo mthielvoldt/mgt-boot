@@ -95,20 +95,22 @@ set(KEYSTORE ${KEYS_DIR}/keystore.c)
 set(PUBLIC_KEY ${KEYS_DIR}/key_pub.der)
 set(PRIVATE_KEY ${KEYS_DIR}/key.der)
 
-# If either public or private key is missing, this custom command runs in place
+# If private key is missing, this custom command runs in place
 # of the next custom command to generate keys, *and* keystore.c
 add_custom_command(
   OUTPUT ${PUBLIC_KEY} ${PRIVATE_KEY}
   DEPENDS ${KEYGEN_TOOL}
-  COMMAND ${KEYGEN_TOOL} ${KEYTOOL_OPTIONS} --exportpubkey -g key.der
-    -keystoreDir ${KEYS_DIR}
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/genKey.sh
+    ${KEYGEN_TOOL} 
+    ${KEYTOOL_OPTIONS} 
+    ${KEYS_DIR}
   WORKING_DIRECTORY ${KEYS_DIR}
   COMMENT "Generating new key pair in ${KEYS_DIR}.")
 
 add_custom_command(
   OUTPUT ${KEYSTORE}
   DEPENDS ${KEYGEN_TOOL} ${PUBLIC_KEY}
-  COMMAND ${KEYGEN_TOOL} ${KEYTOOL_OPTIONS} -i ${PUBLIC_KEY}
+  COMMAND ${KEYGEN_TOOL} --force ${KEYTOOL_OPTIONS} -i ${PUBLIC_KEY} 
     -keystoreDir ${KEYS_DIR}
   WORKING_DIRECTORY ${KEYS_DIR}
   COMMENT "Generating keystore.c in ${KEYS_DIR}.")
