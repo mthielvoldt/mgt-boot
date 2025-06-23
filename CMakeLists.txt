@@ -40,7 +40,6 @@ add_subdirectory(deps/wolfBoot/lib)
 
 add_library(wolfboot
   deps/wolfBoot/src/libwolfboot.c
-  deps/wolfBoot/src/boot_arm.c
   deps/wolfBoot/src/image.c
 )
 target_compile_definitions(wolfboot PUBLIC
@@ -136,6 +135,7 @@ add_custom_command(OUTPUT app_offset_signed.bin
 configure_file(src/partitions.h.in partitions.h)
 add_executable(bootloader.elf
   src/bl_main.c
+  src/boot_app_cm4.c
   ${KEYSTORE}
 )
 target_include_directories(bootloader.elf PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

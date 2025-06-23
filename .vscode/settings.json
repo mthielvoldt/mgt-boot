@@ -1,6 +1,7 @@
 {
   "files.associations": {
-    "*.in": "cpp"
+    "*.in": "cpp",
+    "partitions.h": "c"
   },
   "cSpell.words": [
     "KEYGEN",

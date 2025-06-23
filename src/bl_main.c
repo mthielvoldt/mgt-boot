@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <flash.h>
 #include <image.h>
-#include <hal.h> // do_boot()
+#include <boot_app.h>
 #include <wolfboot/wolfboot.h>
 #include <wolfboot/version.h>
 #include <partitions.h>
@@ -86,11 +86,6 @@ void saveTestPass(void)
         (uint8_t *)&testPass,
         sizeof(uint32_t));
   }
-}
-
-void runApp(void)
-{
-  do_boot((uint32_t*)ACTIVE_APP_ADDRESS_CACHED);
 }
 
 void installUpdate(void)
@@ -193,14 +188,14 @@ void main(void)
 
   if (activeImageOk(justInstalled))
   {
-    runApp();
+    bootApp();
   }
   else // Active image has a problem.
   {
     if (backupImageOk())
     {
       restoreBackup();
-      runApp();
+      bootApp();
     }
   }
 
