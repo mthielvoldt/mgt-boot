@@ -19,7 +19,6 @@ typedef struct
 #define ACTIVE_PARTITION   (uint8_t *)PARTITION_ACTIVE_ADDRESS_DIRECT
 #define DOWNLOAD_PARTITION (uint8_t *)PARTITION_UPDATE_ADDRESS
 #define BACKUP_PARTITION   (uint8_t *)PARTITION_BACKUP_ADDRESS
-#define TEST_RESULT_FLASH_ADDRESS     0x0C01C000u // S7 (logical) last 16kB sector.
 
 #define STATUS_TEST_PASS 0xFFFFFFFFu
 
@@ -67,13 +66,13 @@ void copyImage(uint8_t * dest, uint8_t * src)
 }
 bool testPassSaved()
 {
-  return *(uint32_t *)TEST_RESULT_FLASH_ADDRESS == STATUS_TEST_PASS;
+  return *(uint32_t *)TEST_RESULT_ADDRESS == STATUS_TEST_PASS;
 }
 void clearTestResult(void)
 {
   if (testPassSaved())
   {
-    flash_erase(TEST_RESULT_FLASH_ADDRESS, sizeof(uint32_t));
+    flash_erase(TEST_RESULT_ADDRESS, sizeof(uint32_t));
   }
 }
 void saveTestPass(void)
@@ -82,7 +81,7 @@ void saveTestPass(void)
   if (!testPassSaved())
   {
     flash_program(
-        TEST_RESULT_FLASH_ADDRESS,
+        TEST_RESULT_ADDRESS,
         (uint8_t *)&testPass,
         sizeof(uint32_t));
   }
