@@ -22,7 +22,6 @@ set(GENERATED_FILE_WARNING
 set(ARCH ARM)
 set(VTOR 1) # TODO: prune? 
 set(SPMATH 1)
-set(WOLFBOOT_TARGET xmc4700 CACHE INTERNAL "Target platform")
 set(DSA ed25519)
 list(APPEND KEYTOOL_OPTIONS --ed25519)
 list(APPEND SIGN_OPTIONS WOLFBOOT_SIGN_ED25519)
@@ -134,6 +133,7 @@ add_custom_command(OUTPUT app_offset_signed.bin
 # Bootloader build
 configure_file(src/partitions.h.in partitions.h)
 add_executable(bootloader.elf
+  ${STARTUP_FILE}
   src/bl_main.c
   src/boot_app_cm4.c
   ${KEYSTORE}
