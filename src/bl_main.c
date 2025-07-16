@@ -16,75 +16,52 @@ typedef struct
   uint8_t unconfirmed;
 } partition_status_t;
 
-#define ACTIVE_PARTITION   (uint8_t *)PARTITION_ACTIVE_ADDRESS_DIRECT
+#define ACTIVE_PARTITION (uint8_t *)PARTITION_ACTIVE_ADDRESS_DIRECT
 #define DOWNLOAD_PARTITION (uint8_t *)PARTITION_UPDATE_ADDRESS
-#define BACKUP_PARTITION   (uint8_t *)PARTITION_BACKUP_ADDRESS
+#define BACKUP_PARTITION (uint8_t *)PARTITION_BACKUP_ADDRESS
 
 #define STATUS_TEST_PASS 0xFFFFFFFFu
 
-// Zero signifies an invalid header.
-uint32_t version(uint8_t *partition)
-{
-  return wolfBoot_get_blob_version(partition);
-}
-bool hasIntegrity(uint8_t *partition)
-{
-  struct wolfBoot_image wbImage = {0};
-  wolfBoot_open_image_address(&wbImage, partition);
-  // 0 = verified.  -1 = verification failed.
-  int wbReturn = wolfBoot_verify_integrity(&wbImage);
-  return (wbReturn == 0);
-}
-bool authentic(uint8_t *partition)
-{
-  struct wolfBoot_image wbImage = {0};
-  wolfBoot_open_image_address(&wbImage, partition);
+uint32_t version(uint8_t *partition);
+static bool hasIntegrity(uint8_t *partition);
+static bool authentic(uint8_t *partition);
+static bool validNoncePresent(void);
+static void copyImage(uint8_t *dest, uint8_t *src);
+static bool testPassSaved(void);
+static void clearTestResult(void);
+static void saveTestPass(void);
+static void installUpdate(void);
+static void restoreBackup(void);
+static bool downloadHasGoodUpdate(void);
+static bool activeImageOk(bool justInstalled);
+static bool backupImageOk(void);
 
-  // verify_integrity sets wbImage.sha_hash and .sha_ok on success;
-  int wbIntegrity = wolfBoot_verify_integrity(&wbImage);
-
-  // Skip the time-consuming authenticity check if already failed.
-  if (wbIntegrity != 0)
-    return false;
-
-  int wbAuthenticity = wolfBoot_verify_authenticity(&wbImage);
-  return (wbAuthenticity == 0);
-}
-
-bool validNoncePresent(void)
+void main(void)
 {
-  // TODO: Implement nonce check.
-  return true;
-}
-void copyImage(uint8_t * dest, uint8_t * src)
-{
-  // Note: flash_erase checks each sector is blank before erasing.
-  flash_erase((int32_t)dest, PARTITION_SIZE);
+  bool justInstalled = false;
 
-  // TODO: Optim: only write the image size.
-  flash_program((int32_t)dest, src, PARTITION_SIZE);
-}
-bool testPassSaved()
-{
-  return *(uint32_t *)TEST_RESULT_ADDRESS == STATUS_TEST_PASS;
-}
-void clearTestResult(void)
-{
-  if (testPassSaved())
+  if (downloadHasGoodUpdate())
   {
-    flash_erase(TEST_RESULT_ADDRESS, sizeof(uint32_t));
+    installUpdate();
+    justInstalled = true; // save time; already authenticated
   }
-}
-void saveTestPass(void)
-{
-  const uint32_t testPass = STATUS_TEST_PASS;
-  if (!testPassSaved())
+
+  if (activeImageOk(justInstalled))
   {
-    flash_program(
-        TEST_RESULT_ADDRESS,
-        (uint8_t *)&testPass,
-        sizeof(uint32_t));
+    bootApp();
   }
+  else // Active image has a problem.
+  {
+    if (backupImageOk())
+    {
+      restoreBackup();
+      bootApp();
+    }
+  }
+
+  // No good images.  Panic.
+  for (;;)
+    ;
 }
 
 void installUpdate(void)
@@ -175,30 +152,66 @@ bool backupImageOk(void)
   return true;
 }
 
-void main(void)
+// Zero signifies an invalid header.
+uint32_t version(uint8_t *partition)
 {
-  bool justInstalled = false;
+  return wolfBoot_get_blob_version(partition);
+}
+bool hasIntegrity(uint8_t *partition)
+{
+  struct wolfBoot_image wbImage = {0};
+  wolfBoot_open_image_address(&wbImage, partition);
+  // 0 = verified.  -1 = verification failed.
+  int wbReturn = wolfBoot_verify_integrity(&wbImage);
+  return (wbReturn == 0);
+}
+bool authentic(uint8_t *partition)
+{
+  struct wolfBoot_image wbImage = {0};
+  wolfBoot_open_image_address(&wbImage, partition);
 
-  if (downloadHasGoodUpdate())
-  {
-    installUpdate();
-    justInstalled = true; // save time; already authenticated
-  }
+  // verify_integrity sets wbImage.sha_hash and .sha_ok on success;
+  int wbIntegrity = wolfBoot_verify_integrity(&wbImage);
 
-  if (activeImageOk(justInstalled))
-  {
-    bootApp();
-  }
-  else // Active image has a problem.
-  {
-    if (backupImageOk())
-    {
-      restoreBackup();
-      bootApp();
-    }
-  }
+  // Skip the time-consuming authenticity check if already failed.
+  if (wbIntegrity != 0)
+    return false;
 
-  // No good images.  Panic.
-  for (;;)
-    ;
+  int wbAuthenticity = wolfBoot_verify_authenticity(&wbImage);
+  return (wbAuthenticity == 0);
+}
+bool validNoncePresent(void)
+{
+  // TODO: Implement nonce check.
+  return true;
+}
+void copyImage(uint8_t *dest, uint8_t *src)
+{
+  // Note: flash_erase checks each sector is blank before erasing.
+  flash_erase((int32_t)dest, PARTITION_SIZE);
+
+  // TODO: Optim: only write the image size.
+  flash_program((int32_t)dest, src, PARTITION_SIZE);
+}
+bool testPassSaved(void)
+{
+  return *(uint32_t *)TEST_RESULT_ADDRESS == STATUS_TEST_PASS;
+}
+void clearTestResult(void)
+{
+  if (testPassSaved())
+  {
+    flash_erase(TEST_RESULT_ADDRESS, sizeof(uint32_t));
+  }
+}
+void saveTestPass(void)
+{
+  const uint32_t testPass = STATUS_TEST_PASS;
+  if (!testPassSaved())
+  {
+    flash_program(
+        TEST_RESULT_ADDRESS,
+        (uint8_t *)&testPass,
+        sizeof(uint32_t));
+  }
 }
