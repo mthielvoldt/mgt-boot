@@ -1,4 +1,4 @@
-/** @file flash.h 
+/** @file flash_port.h 
  * @brief Interface for writing to program memory, for use in firmware-update.
  * These functions are called by the bootloader for swapping FW images between
  * partitions.  It must be implemented at the project level. 
@@ -7,8 +7,8 @@
  * in the notes below for each function. 
  * PARTITION_SIZE, SECTOR_SIZE are defined in partitions.h.
 */
-#ifndef FLASH_H
-#define FLASH_H
+#ifndef flash_port_H
+#define flash_port_H
 
 #include <stdint.h>
 

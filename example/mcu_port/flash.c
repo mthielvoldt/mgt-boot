@@ -7,7 +7,7 @@
  * be an adapter between a manufacturer-HAL and the interface specified in 
  * flash_hal.h
  */
-#include <flash.h>
+#include <flash_port.h>
 
 int flash_program(uint32_t address, const uint8_t *data, uint32_t len) {}
 

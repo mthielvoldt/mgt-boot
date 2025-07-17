@@ -7,12 +7,14 @@ cmake_minimum_required(VERSION 3.22.1)
 # Cmake variables to be set:
 # - CMAKE_BUILD_TYPE: ["Debug" | "Release"]
 # - ROOT_PARTITION_LINKER_FILE: path to MCU-appropriate .ld file.
+# - STARTUP_FILE: MCU-appropriate .s file providing vector table, reset fn
+# - ASSEMBLER_FLAGS: (optional) flags for assembling .S files
 # - MGTBOOT_DIR: absolute path to the mgt-boot dir.
 # - APP_DEPENDS: a list of dependencies for the app (sources and libraries).
 #     This is used to determine when to generate a new build_time.
 # Targets:
-# - MCUPort library.
-# - flash_lib library that implements flash.h interface.
+# - mcu_port_lib library that implements flash_port.h, clock_port.h interfaces,
+#   along with any dependencies of the STARTUP_FILE.
 # - app_offset.elf executable
 
 
@@ -22,6 +24,7 @@ set(GENERATED_FILE_WARNING
 set(ARCH ARM)
 set(VTOR 1) # TODO: prune? 
 set(SPMATH 1)
+set(WOLFBOOT_TARGET unspecified CACHE INTERNAL "Target platform")
 set(DSA ed25519)
 list(APPEND KEYTOOL_OPTIONS --ed25519)
 list(APPEND SIGN_OPTIONS WOLFBOOT_SIGN_ED25519)
@@ -138,8 +141,12 @@ add_executable(bootloader.elf
   src/boot_app_cm4.c
   ${KEYSTORE}
 )
-target_include_directories(bootloader.elf PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(bootloader.elf flash_lib wolfboot MCUPort)
+target_include_directories(bootloader.elf PRIVATE 
+  ${CMAKE_CURRENT_BINARY_DIR}
+  inc
+)
+target_compile_options(bootloader.elf PRIVATE ${ASSEMBLER_FLAGS})
+target_link_libraries(bootloader.elf mcu_port_lib wolfboot)
 target_link_options(bootloader.elf PRIVATE 
   "-T${ROOT_PARTITION_LINKER_FILE}")
 

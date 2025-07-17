@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include <flash.h>
+#include <clock_port.h>
+#include <flash_port.h>
 #include <image.h>
 #include <boot_app.h>
 #include <wolfboot/wolfboot.h>
@@ -39,6 +40,8 @@ static bool backupImageOk(void);
 void main(void)
 {
   bool justInstalled = false;
+
+  initClock();
 
   if (downloadHasGoodUpdate())
   {
