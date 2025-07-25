@@ -21,7 +21,8 @@ typedef struct
 #define DOWNLOAD_PARTITION (uint8_t *)PARTITION_UPDATE_ADDRESS
 #define BACKUP_PARTITION (uint8_t *)PARTITION_BACKUP_ADDRESS
 
-#define STATUS_TEST_PASS 0xFFFFFFFFu
+#define STATUS_TEST_FAIL 0xFFFFFFFFu
+#define STATUS_TEST_PASS 0x5555AAAAu
 
 uint32_t version(uint8_t *partition);
 static bool hasIntegrity(uint8_t *partition);
@@ -190,9 +191,6 @@ bool validNoncePresent(void)
 }
 void copyImage(uint8_t *dest, uint8_t *src)
 {
-  // Note: flash_erase checks each sector is blank before erasing.
-  flash_erase((int32_t)dest, PARTITION_SIZE);
-
   // TODO: Optim: only write the image size.
   flash_program((int32_t)dest, src, PARTITION_SIZE);
 }
@@ -204,7 +202,8 @@ void clearTestResult(void)
 {
   if (testPassSaved())
   {
-    flash_erase(TEST_RESULT_ADDRESS, sizeof(uint32_t));
+    const uint32_t testFail = STATUS_TEST_FAIL;
+    flash_program(TEST_RESULT_ADDRESS, (uint8_t *)&testFail, sizeof(uint32_t));
   }
 }
 void saveTestPass(void)
